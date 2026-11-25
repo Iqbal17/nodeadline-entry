@@ -70,6 +70,15 @@ MAX_CHARS = 200
 LINE = "The deadline and I had a meeting, and it didn't show up either."
 
 
+def validate_line(line):
+    """Gate guard: raise unless the line is 1-200 characters."""
+    if not (1 <= len(line) <= MAX_CHARS):
+        raise ValueError("line must be 1-200 characters")
+    if line.strip() == "":
+        raise ValueError("line must not be only whitespace")
+    return line
+
+
 def check_gate(text):
     """Mirror the sealed gate: 1-200 chars, not only whitespace."""
     return 1 <= len(text) <= MAX_CHARS and text.strip() != ""
@@ -82,11 +91,23 @@ def entry_path():
     return os.path.join(out_dir, "entry.txt")
 
 
+def verify_written(path):
+    """Write-back self-check: the file must hold exactly the line + newline."""
+    with open(path, "r", encoding="utf-8") as f:
+        content = f.read()
+    if content != LINE + "\n":
+        raise ValueError("written entry.txt does not match the line")
+    return True
+
+
 def main():
+    validate_line(LINE)
     if not check_gate(LINE):
         raise SystemExit("line fails the 1-200 character gate")
-    with open(entry_path(), "w", encoding="utf-8") as f:
+    path = entry_path()
+    with open(path, "w", encoding="utf-8") as f:
         f.write(LINE + "\n")
+    verify_written(path)
 
 
 if __name__ == "__main__":
